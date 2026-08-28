@@ -211,7 +211,7 @@
     <span class="badge">✓ Unit Meter ($INSUNITS)</span>
     <span class="badge">✓ LWPolyline Menyatu</span>
     <span class="badge">✓ Layer per-Folder KML</span>
-    <span class="badge">✓ AutoCAD Ready</span>
+    <span class="badge">✓ Direct Open Ready</span>
   </div>
 
   <div class="dropzone" id="dropzone">
@@ -263,7 +263,7 @@
     if (!str) return 'GARIS_DEFAULT';
     let clean = str.replace(/[^a-zA-Z0-9_-]/g, '_').toUpperCase().trim();
     if (!clean) return 'GARIS_DEFAULT';
-    return clean.substring(0, 31); // Batas panjang nama layer AutoCAD
+    return clean.substring(0, 31);
   }
 
   function makeBlockName(str, index) {
@@ -370,6 +370,7 @@
 
     let dxfBlocks = '';
     let dxfEntities = '';
+    const layerSet = new Set();
 
     for (let i = 0; i < placemarks.length; i++) {
       const pm = placemarks[i];
@@ -377,15 +378,15 @@
       const rawName = nameElem ? nameElem.textContent : `Penanda_${i+1}`;
       const name = cleanText(rawName);
 
-      // Dapatkan nama folder tempat Placemark berada untuk dijadikan Nama Layer
       const folderName = getFolderName(pm);
       const layerName = sanitizeLayerName(folderName);
+      layerSet.add(layerName);
 
       const pointElem = pm.getElementsByTagName('Point')[0];
       const lineElem = pm.getElementsByTagName('LineString')[0];
       const polyElem = pm.getElementsByTagName('Polygon')[0];
 
-      // 1. Opsi Titik / Placemark
+      // Point / Placemark
       if (pointElem) {
         const coordElem = pointElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
@@ -404,7 +405,7 @@
         }
       }
 
-      // 2. Opsi Garis (LineString -> LWPOLYLINE menyatu)
+      // LineString -> LWPOLYLINE
       if (lineElem) {
         const coordElem = lineElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
@@ -418,13 +419,12 @@
         }
       }
 
-      // 3. Opsi Poligon (Polygon -> LWPOLYLINE Tertutup)
+      // Polygon -> LWPOLYLINE Closed
       if (polyElem) {
         const coordElem = polyElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
           const pts = parseCoordinatesText(coordElem.textContent);
           if (pts.length > 1) {
-            // Flag 1 mewakili polyline tertutup (closed loop)
             dxfEntities += `  0\nLWPOLYLINE\n  8\n${layerName}\n 90\n${pts.length}\n 70\n1\n`;
             for (let j = 0; j < pts.length; j++) {
               dxfEntities += ` 10\n${pts[j].x.toFixed(3)}\n 20\n${pts[j].y.toFixed(3)}\n`;
@@ -434,11 +434,18 @@
       }
     }
 
+    // Deklarasi SECTION TABLES lengkap agar AutoCAD bisa membaca tanpa prompt "Press ENTER"
+    let layersDxf = '';
+    layerSet.forEach(layer => {
+      layersDxf += `  0\nLAYER\n  2\n${layer}\n 70\n0\n 62\n7\n 6\nContinuous\n`;
+    });
+
     const headerSection = `  0\nSECTION\n  2\nHEADER\n  9\n$INSUNITS\n 70\n6\n  0\nENDSEC\n`;
+    const tablesSection = `  0\nSECTION\n  2\nTABLES\n  0\nTABLE\n  2\nLAYER\n 70\n${layerSet.size}\n${layersDxf}  0\nENDTAB\n  0\nENDSEC\n`;
     const blocksSection = `  0\nSECTION\n  2\nBLOCKS\n${dxfBlocks}  0\nENDSEC\n`;
     const entitiesSection = `  0\nSECTION\n  2\nENTITIES\n${dxfEntities}  0\nENDSEC\n`;
 
-    return `${headerSection}${blocksSection}${entitiesSection}  0\nEOF\n`;
+    return `${headerSection}${tablesSection}${blocksSection}${entitiesSection}  0\nEOF\n`;
   }
 </script>
 
