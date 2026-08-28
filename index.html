@@ -209,7 +209,8 @@
 
   <div class="features-list">
     <span class="badge">✓ Unit Meter ($INSUNITS)</span>
-    <span class="badge">✓ Block Titik + Nama</span>
+    <span class="badge">✓ LWPolyline Menyatu</span>
+    <span class="badge">✓ Layer per-Folder KML</span>
     <span class="badge">✓ AutoCAD Ready</span>
   </div>
 
@@ -254,13 +255,34 @@
   }
 
   function cleanText(str) {
-    if (!str) return 'PENANDA';
+    if (!str) return 'DEFAULT';
     return str.replace(/[^\x20-\x7E]/g, '').replace(/[\r\n\t\\"]/g, ' ').trim();
+  }
+
+  function sanitizeLayerName(str) {
+    if (!str) return 'GARIS_DEFAULT';
+    let clean = str.replace(/[^a-zA-Z0-9_-]/g, '_').toUpperCase().trim();
+    if (!clean) return 'GARIS_DEFAULT';
+    return clean.substring(0, 31); // Batas panjang nama layer AutoCAD
   }
 
   function makeBlockName(str, index) {
     const safeName = str.replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 20);
     return `BLK_${index}_${safeName}`;
+  }
+
+  function getFolderName(placemarkNode) {
+    let current = placemarkNode.parentNode;
+    while (current && current.nodeType === 1) {
+      if (current.tagName.toLowerCase() === 'folder') {
+        const nameElem = current.getElementsByTagName('name')[0];
+        if (nameElem && nameElem.textContent.trim()) {
+          return nameElem.textContent.trim();
+        }
+      }
+      current = current.parentNode;
+    }
+    return 'UTAMA';
   }
 
   async function processFile() {
@@ -355,10 +377,15 @@
       const rawName = nameElem ? nameElem.textContent : `Penanda_${i+1}`;
       const name = cleanText(rawName);
 
+      // Dapatkan nama folder tempat Placemark berada untuk dijadikan Nama Layer
+      const folderName = getFolderName(pm);
+      const layerName = sanitizeLayerName(folderName);
+
       const pointElem = pm.getElementsByTagName('Point')[0];
       const lineElem = pm.getElementsByTagName('LineString')[0];
       const polyElem = pm.getElementsByTagName('Polygon')[0];
 
+      // 1. Opsi Titik / Placemark
       if (pointElem) {
         const coordElem = pointElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
@@ -367,36 +394,41 @@
             const { x, y, elev } = pts[0];
             const blockName = makeBlockName(name, i + 1);
 
-            dxfBlocks += `  0\nBLOCK\n  8\nPENANDA\n  2\n${blockName}\n 70\n0\n 10\n0.0\n 20\n0.0\n 30\n0.0\n`;
-            dxfBlocks += `  0\nPOINT\n  8\nPENANDA\n 10\n0.0\n 20\n0.0\n 30\n0.0\n`;
-            dxfBlocks += `  0\nTEXT\n  8\nPENANDA\n 10\n2.0\n 20\n2.0\n 30\n0.0\n 40\n2.5\n  1\n${name}\n`;
-            dxfBlocks += `  0\nENDBLK\n  8\nPENANDA\n`;
+            dxfBlocks += `  0\nBLOCK\n  8\n${layerName}\n  2\n${blockName}\n 70\n0\n 10\n0.0\n 20\n0.0\n 30\n0.0\n`;
+            dxfBlocks += `  0\nPOINT\n  8\n${layerName}\n 10\n0.0\n 20\n0.0\n 30\n0.0\n`;
+            dxfBlocks += `  0\nTEXT\n  8\n${layerName}\n 10\n2.0\n 20\n2.0\n 30\n0.0\n 40\n2.5\n  1\n${name}\n`;
+            dxfBlocks += `  0\nENDBLK\n  8\n${layerName}\n`;
 
-            dxfEntities += `  0\nINSERT\n  8\nPENANDA\n  2\n${blockName}\n 10\n${x.toFixed(3)}\n 20\n${y.toFixed(3)}\n 30\n${elev.toFixed(3)}\n`;
+            dxfEntities += `  0\nINSERT\n  8\n${layerName}\n  2\n${blockName}\n 10\n${x.toFixed(3)}\n 20\n${y.toFixed(3)}\n 30\n${elev.toFixed(3)}\n`;
           }
         }
       }
 
+      // 2. Opsi Garis (LineString -> LWPOLYLINE menyatu)
       if (lineElem) {
         const coordElem = lineElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
           const pts = parseCoordinatesText(coordElem.textContent);
-          for (let j = 0; j < pts.length - 1; j++) {
-            const p1 = pts[j];
-            const p2 = pts[j + 1];
-            dxfEntities += `  0\nLINE\n  8\nGARIS\n 10\n${p1.x.toFixed(3)}\n 20\n${p1.y.toFixed(3)}\n 30\n${p1.elev.toFixed(3)}\n 11\n${p2.x.toFixed(3)}\n 21\n${p2.y.toFixed(3)}\n 31\n${p2.elev.toFixed(3)}\n`;
+          if (pts.length > 1) {
+            dxfEntities += `  0\nLWPOLYLINE\n  8\n${layerName}\n 90\n${pts.length}\n 70\n0\n`;
+            for (let j = 0; j < pts.length; j++) {
+              dxfEntities += ` 10\n${pts[j].x.toFixed(3)}\n 20\n${pts[j].y.toFixed(3)}\n`;
+            }
           }
         }
       }
 
+      // 3. Opsi Poligon (Polygon -> LWPOLYLINE Tertutup)
       if (polyElem) {
         const coordElem = polyElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
           const pts = parseCoordinatesText(coordElem.textContent);
-          for (let j = 0; j < pts.length - 1; j++) {
-            const p1 = pts[j];
-            const p2 = pts[j + 1];
-            dxfEntities += `  0\nLINE\n  8\nPOLYGON\n 10\n${p1.x.toFixed(3)}\n 20\n${p1.y.toFixed(3)}\n 30\n${p1.elev.toFixed(3)}\n 11\n${p2.x.toFixed(3)}\n 21\n${p2.y.toFixed(3)}\n 31\n${p2.elev.toFixed(3)}\n`;
+          if (pts.length > 1) {
+            // Flag 1 mewakili polyline tertutup (closed loop)
+            dxfEntities += `  0\nLWPOLYLINE\n  8\n${layerName}\n 90\n${pts.length}\n 70\n1\n`;
+            for (let j = 0; j < pts.length; j++) {
+              dxfEntities += ` 10\n${pts[j].x.toFixed(3)}\n 20\n${pts[j].y.toFixed(3)}\n`;
+            }
           }
         }
       }
