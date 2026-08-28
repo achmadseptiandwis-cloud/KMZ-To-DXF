@@ -4,24 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KMZ / KML to DXF Converter</title>
-  <!-- Google Fonts & CDN -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.9.0/proj4.js"></script>
   
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
     body {
       background: #0f172a;
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.12) 0px, transparent 50%);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -29,68 +19,18 @@
       padding: 20px;
       color: #f8fafc;
     }
-
     .container {
       width: 100%;
-      max-width: 540px;
+      max-width: 520px;
       background: #1e293b;
       border: 1px solid #334155;
       border-radius: 20px;
       padding: 32px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
     }
-
-    .header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .icon-badge {
-      width: 52px;
-      height: 52px;
-      background: rgba(59, 130, 246, 0.1);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      color: #3b82f6;
-    }
-
-    .header h2 {
-      font-size: 22px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 8px;
-    }
-
-    .header p {
-      font-size: 13.5px;
-      color: #94a3b8;
-      line-height: 1.5;
-    }
-
-    /* Badges Feature */
-    .features-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-bottom: 24px;
-    }
-
-    .badge {
-      font-size: 11.5px;
-      font-weight: 600;
-      background: #0f172a;
-      color: #38bdf8;
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1px solid #1e293b;
-    }
-
-    /* Dropzone Upload */
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h2 { font-size: 22px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+    .header p { font-size: 13.5px; color: #94a3b8; }
     .dropzone {
       border: 2px dashed #475569;
       border-radius: 16px;
@@ -98,51 +38,12 @@
       text-align: center;
       cursor: pointer;
       background: #0f172a;
-      transition: all 0.2s ease-in-out;
       position: relative;
     }
-
-    .dropzone:hover, .dropzone.dragover {
-      border-color: #3b82f6;
-      background: rgba(59, 130, 246, 0.05);
-    }
-
     .dropzone input[type="file"] {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      cursor: pointer;
+      top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
     }
-
-    .upload-icon {
-      margin-bottom: 10px;
-      color: #64748b;
-    }
-
-    .dropzone-text {
-      font-size: 14px;
-      font-weight: 500;
-      color: #cbd5e1;
-    }
-
-    .dropzone-subtext {
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 4px;
-    }
-
-    .file-name-display {
-      margin-top: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #38bdf8;
-      word-break: break-all;
-    }
-
-    /* Primary Button */
     .btn {
       background: #3b82f6;
       color: white;
@@ -154,98 +55,36 @@
       cursor: pointer;
       width: 100%;
       margin-top: 20px;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
     }
-
-    .btn:hover {
-      background: #2563eb;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    /* Status Bar */
-    .status-container {
-      margin-top: 18px;
-      min-height: 20px;
-      text-align: center;
-    }
-
-    .status-text {
-      font-size: 13px;
-      font-weight: 500;
-      color: #94a3b8;
-    }
-
-    .status-text.success {
-      color: #4ade80;
-    }
-
-    .status-text.error {
-      color: #f87171;
-    }
+    .btn:hover { background: #2563eb; }
+    .status-text { margin-top: 16px; font-size: 13px; text-align: center; color: #94a3b8; }
+    .status-text.success { color: #4ade80; }
+    .status-text.error { color: #f87171; }
+    .file-name { margin-top: 8px; font-size: 13px; color: #38bdf8; font-weight: 600; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <div class="header">
-    <div class="icon-badge">
-      <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-      </svg>
-    </div>
     <h2>Converter KMZ / KML ke DXF</h2>
-    <p>Ubah file geospasial Google Earth ke format CAD AutoCAD secara otomatis dan praktis.</p>
+    <p>Format DXF ASCII R12 Kompatibel AutoCAD 2000–2026</p>
   </div>
 
-  <div class="features-list">
-    <span class="badge">✓ Auto-Fit Bounds</span>
-    <span class="badge">✓ LWPolyline Menyatu</span>
-    <span class="badge">✓ Layer per-Folder KML</span>
-    <span class="badge">✓ Standard AutoCAD Header</span>
+  <div class="dropzone">
+    <input type="file" id="fileInput" accept=".kmz,.kml" onchange="showFileName(this)">
+    <div style="color: #64748b; margin-bottom: 8px;">📁 Klik atau drag file .kmz / .kml di sini</div>
+    <div class="file-name" id="fileName"></div>
   </div>
 
-  <div class="dropzone" id="dropzone">
-    <input type="file" id="fileInput" accept=".kmz,.kml" onchange="handleFileSelect(this)">
-    <div class="upload-icon">
-      <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-      </svg>
-    </div>
-    <div class="dropzone-text">Klik atau tarik file KMZ / KML ke sini</div>
-    <div class="dropzone-subtext">Mendukung format .kmz & .kml</div>
-    <div class="file-name-display" id="fileNameDisplay"></div>
-  </div>
+  <button class="btn" onclick="processFile()">Konversi & Unduh DXF</button>
 
-  <button class="btn" onclick="processFile()">
-    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-    </svg>
-    Konversi & Unduh DXF
-  </button>
-
-  <div class="status-container">
-    <div class="status-text" id="status"></div>
-  </div>
+  <div class="status-text" id="status"></div>
 </div>
 
 <script>
-  function handleFileSelect(input) {
-    const fileNameDisplay = document.getElementById('fileNameDisplay');
-    if (input.files.length > 0) {
-      fileNameDisplay.innerText = 'File Terpilih: ' + input.files[0].name;
-    } else {
-      fileNameDisplay.innerText = '';
-    }
+  function showFileName(input) {
+    document.getElementById('fileName').innerText = input.files[0] ? input.files[0].name : '';
   }
 
   function getUTMProjString(lon, lat) {
@@ -254,21 +93,9 @@
     return `+proj=utm +zone=${zone} ${hemisphere} +datum=WGS84 +units=m +no_defs`;
   }
 
-  function cleanText(str) {
-    if (!str) return 'DEFAULT';
-    return str.replace(/[^\x20-\x7E]/g, '').replace(/[\r\n\t\\"]/g, ' ').trim();
-  }
-
-  function sanitizeLayerName(str) {
-    if (!str) return 'GARIS_DEFAULT';
-    let clean = str.replace(/[^a-zA-Z0-9_-]/g, '_').toUpperCase().trim();
-    if (!clean) return 'GARIS_DEFAULT';
-    return clean.substring(0, 31);
-  }
-
-  function makeBlockName(str, index) {
-    const safeName = str.replace(/[^a-zA-Z0-9_]/g, '_').substring(0, 20);
-    return `BLK_${index}_${safeName}`;
+  function cleanString(str) {
+    if (!str) return 'LAYER_0';
+    return str.replace(/[^a-zA-Z0-9_-]/g, '_').toUpperCase().substring(0, 31) || 'LAYER_0';
   }
 
   function getFolderName(placemarkNode) {
@@ -282,7 +109,7 @@
       }
       current = current.parentNode;
     }
-    return 'UTAMA';
+    return 'OBJEK_KML';
   }
 
   async function processFile() {
@@ -297,11 +124,10 @@
 
     const file = fileInput.files[0];
     status.className = 'status-text';
-    status.innerText = 'Membaca & memproses data geospasial...';
+    status.innerText = 'Memproses data geospasial...';
 
     try {
       let kmlText = '';
-
       if (file.name.endsWith('.kmz')) {
         const zip = await JSZip.loadAsync(file);
         const kmlFile = Object.keys(zip.files).find(name => name.endsWith('.kml'));
@@ -311,26 +137,26 @@
         kmlText = await file.text();
       }
 
-      const dxfContent = parseKMLToDXF(kmlText);
+      const dxfContent = buildCleanDXF(kmlText);
 
-      const blob = new Blob([dxfContent], { type: 'application/dxf' });
+      const blob = new Blob([dxfContent], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = file.name.replace(/\.(kmz|kml)$/i, '') + '.dxf';
+      a.download = file.name.replace(/\.(kmz|kml)$/i, '') + '_fix.dxf';
       a.click();
       URL.revokeObjectURL(url);
 
       status.className = 'status-text success';
-      status.innerText = '✓ Konversi selesai! File DXF berhasil diunduh.';
+      status.innerText = '✓ Selesai! Buka file DXF baru ini di AutoCAD.';
     } catch (err) {
       console.error(err);
       status.className = 'status-text error';
-      status.innerText = 'Terjadi kesalahan: ' + err.message;
+      status.innerText = 'Error: ' + err.message;
     }
   }
 
-  function parseKMLToDXF(kmlText) {
+  function buildCleanDXF(kmlText) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(kmlText, 'text/xml');
     const placemarks = xmlDoc.getElementsByTagName('Placemark');
@@ -347,14 +173,20 @@
     }
 
     if (firstLon === null || firstLat === null) {
-      throw new Error('Tidak ada koordinat valid yang ditemukan dalam file.');
+      throw new Error('Tidak ada koordinat valid ditemukan.');
     }
 
     const utmProj = getUTMProjString(firstLon, firstLat);
 
+    let lines = [];
+    const addLine = (code, val) => {
+      lines.push(code.toString());
+      lines.push(val.toString());
+    };
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
 
-    function parseCoordinatesText(text) {
+    function convertCoords(text) {
       return text.trim().split(/\s+/).map(str => {
         const parts = str.split(',');
         if (parts.length >= 2) {
@@ -363,10 +195,8 @@
           const elev = parts[2] ? parseFloat(parts[2]) : 0;
           if (!isNaN(lon) && !isNaN(lat)) {
             const [x, y] = proj4(utmProj, [lon, lat]);
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
             return { x, y, elev };
           }
         }
@@ -374,90 +204,159 @@
       }).filter(item => item !== null);
     }
 
-    let dxfBlocks = '';
-    let dxfEntities = '';
-    const layerSet = new Set(['0', 'PENANDA']);
+    const layers = new Set(['0', 'PENANDA']);
+    let entityBuffer = [];
+
+    const addEnt = (code, val) => {
+      entityBuffer.push(code.toString());
+      entityBuffer.push(val.toString());
+    };
 
     for (let i = 0; i < placemarks.length; i++) {
       const pm = placemarks[i];
       const nameElem = pm.getElementsByTagName('name')[0];
-      const rawName = nameElem ? nameElem.textContent : `Penanda_${i+1}`;
-      const name = cleanText(rawName);
-
-      const folderName = getFolderName(pm);
-      const layerName = sanitizeLayerName(folderName);
-      layerSet.add(layerName);
+      const rawName = nameElem ? nameElem.textContent.trim() : `Point_${i+1}`;
+      const layerName = cleanString(getFolderName(pm));
+      layers.add(layerName);
 
       const pointElem = pm.getElementsByTagName('Point')[0];
       const lineElem = pm.getElementsByTagName('LineString')[0];
       const polyElem = pm.getElementsByTagName('Polygon')[0];
 
-      // Point / Placemark
+      // Point / Marker
       if (pointElem) {
         const coordElem = pointElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
-          const pts = parseCoordinatesText(coordElem.textContent);
+          const pts = convertCoords(coordElem.textContent);
           if (pts.length > 0) {
-            const { x, y, elev } = pts[0];
-            const blockName = makeBlockName(name, i + 1);
+            addEnt(0, 'POINT');
+            addEnt(8, layerName);
+            addEnt(10, pts[0].x.toFixed(4));
+            addEnt(20, pts[0].y.toFixed(4));
+            addEnt(30, pts[0].elev.toFixed(4));
 
-            dxfBlocks += `  0\nBLOCK\n  8\n${layerName}\n  2\n${blockName}\n 70\n0\n 10\n0.0\n 20\n0.0\n 30\n0.0\n`;
-            dxfBlocks += `  0\nPOINT\n  8\n${layerName}\n 10\n0.0\n 20\n0.0\n 30\n0.0\n`;
-            dxfBlocks += `  0\nTEXT\n  8\n${layerName}\n 10\n2.0\n 20\n2.0\n 30\n0.0\n 40\n2.5\n  1\n${name}\n`;
-            dxfBlocks += `  0\nENDBLK\n  8\n${layerName}\n`;
-
-            dxfEntities += `  0\nINSERT\n  8\n${layerName}\n  2\n${blockName}\n 10\n${x.toFixed(3)}\n 20\n${y.toFixed(3)}\n 30\n${elev.toFixed(3)}\n`;
+            addEnt(0, 'TEXT');
+            addEnt(8, layerName);
+            addEnt(10, (pts[0].x + 1.5).toFixed(4));
+            addEnt(20, (pts[0].y + 1.5).toFixed(4));
+            addEnt(30, pts[0].elev.toFixed(4));
+            addEnt(40, '2.0');
+            addEnt(1, rawName.replace(/[^\x20-\x7E]/g, ''));
           }
         }
       }
 
-      // LineString -> LWPOLYLINE
+      // Polyline LineString
       if (lineElem) {
         const coordElem = lineElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
-          const pts = parseCoordinatesText(coordElem.textContent);
+          const pts = convertCoords(coordElem.textContent);
           if (pts.length > 1) {
-            dxfEntities += `  0\nLWPOLYLINE\n  8\n${layerName}\n 90\n${pts.length}\n 70\n0\n`;
-            for (let j = 0; j < pts.length; j++) {
-              dxfEntities += ` 10\n${pts[j].x.toFixed(3)}\n 20\n${pts[j].y.toFixed(3)}\n`;
+            addEnt(0, 'POLYLINE');
+            addEnt(8, layerName);
+            addEnt(66, '1');
+            addEnt(70, '0');
+            for (let p of pts) {
+              addEnt(0, 'VERTEX');
+              addEnt(8, layerName);
+              addEnt(10, p.x.toFixed(4));
+              addEnt(20, p.y.toFixed(4));
+              addEnt(30, p.elev.toFixed(4));
             }
+            addEnt(0, 'SEQEND');
+            addEnt(8, layerName);
           }
         }
       }
 
-      // Polygon -> LWPOLYLINE Closed
+      // Polyline Polygon
       if (polyElem) {
         const coordElem = polyElem.getElementsByTagName('coordinates')[0];
         if (coordElem) {
-          const pts = parseCoordinatesText(coordElem.textContent);
+          const pts = convertCoords(coordElem.textContent);
           if (pts.length > 1) {
-            dxfEntities += `  0\nLWPOLYLINE\n  8\n${layerName}\n 90\n${pts.length}\n 70\n1\n`;
-            for (let j = 0; j < pts.length; j++) {
-              dxfEntities += ` 10\n${pts[j].x.toFixed(3)}\n 20\n${pts[j].y.toFixed(3)}\n`;
+            addEnt(0, 'POLYLINE');
+            addEnt(8, layerName);
+            addEnt(66, '1');
+            addEnt(70, '1'); // Closed
+            for (let p of pts) {
+              addEnt(0, 'VERTEX');
+              addEnt(8, layerName);
+              addEnt(10, p.x.toFixed(4));
+              addEnt(20, p.y.toFixed(4));
+              addEnt(30, p.elev.toFixed(4));
             }
+            addEnt(0, 'SEQEND');
+            addEnt(8, layerName);
           }
         }
       }
     }
 
-    if (minX === Infinity) {
-      minX = 0; minY = 0; maxX = 1000; maxY = 1000;
-    }
+    if (minX === Infinity) { minX = 0; minY = 0; maxX = 100; maxY = 100; }
 
-    // Deklarasi Header Lengkap & Extents Bounding Box AutoCAD
-    const headerSection = `  0\nSECTION\n  2\nHEADER\n  9\n$ACADVER\n  1\nAC1009\n  9\n$INSUNITS\n 70\n6\n  9\n$EXTMIN\n 10\n${minX.toFixed(3)}\n 20\n${minY.toFixed(3)}\n 30\n0.0\n  9\n$EXTMAX\n 10\n${maxX.toFixed(3)}\n 20\n${maxY.toFixed(3)}\n 30\n0.0\n  0\nENDSEC\n`;
+    // === HEADER SECTION ===
+    addLine(0, 'SECTION');
+    addLine(2, 'HEADER');
+    addLine(9, '$ACADVER');
+    addLine(1, 'AC1009'); // R12 ASCII DXF
+    addLine(9, '$EXTMIN');
+    addLine(10, minX.toFixed(4));
+    addLine(20, minY.toFixed(4));
+    addLine(30, '0.0');
+    addLine(9, '$EXTMAX');
+    addLine(10, maxX.toFixed(4));
+    addLine(20, maxY.toFixed(4));
+    addLine(30, '0.0');
+    addLine(0, 'ENDSEC');
 
-    // Deklarasi Tables Layer & LineTypes
-    let layerTable = '';
-    layerSet.forEach(layer => {
-      layerTable += `  0\nLAYER\n  2\n${layer}\n 70\n0\n 62\n7\n  6\nCONTINUOUS\n`;
+    // === TABLES SECTION ===
+    addLine(0, 'SECTION');
+    addLine(2, 'TABLES');
+
+    // Linetype Table
+    addLine(0, 'TABLE');
+    addLine(2, 'LTYPE');
+    addLine(70, '1');
+    addLine(0, 'LTYPE');
+    addLine(2, 'CONTINUOUS');
+    addLine(70, '0');
+    addLine(3, 'Solid line');
+    addLine(72, '65');
+    addLine(73, '0');
+    addLine(40, '0.0');
+    addLine(0, 'ENDTAB');
+
+    // Layer Table
+    addLine(0, 'TABLE');
+    addLine(2, 'LAYER');
+    addLine(70, layers.size);
+    layers.forEach(lyr => {
+      addLine(0, 'LAYER');
+      addLine(2, lyr);
+      addLine(70, '0');
+      addLine(62, '7');
+      addLine(6, 'CONTINUOUS');
     });
+    addLine(0, 'ENDTAB');
 
-    const tablesSection = `  0\nSECTION\n  2\nTABLES\n  0\nTABLE\n  2\nLTYPE\n 70\n1\n  0\nLTYPE\n  2\nCONTINUOUS\n 70\n0\n  3\nSolid line\n 72\n65\n 73\n0\n 40\n0.0\n  0\nENDTAB\n  0\nTABLE\n  2\nLAYER\n 70\n${layerSet.size}\n${layerTable}  0\nENDTAB\n  0\nENDSEC\n`;
-    const blocksSection = `  0\nSECTION\n  2\nBLOCKS\n${dxfBlocks}  0\nENDSEC\n`;
-    const entitiesSection = `  0\nSECTION\n  2\nENTITIES\n${dxfEntities}  0\nENDSEC\n`;
+    addLine(0, 'ENDSEC');
 
-    return `${headerSection}${tablesSection}${blocksSection}${entitiesSection}  0\nEOF\n`;
+    // === BLOCKS SECTION ===
+    addLine(0, 'SECTION');
+    addLine(2, 'BLOCKS');
+    addLine(0, 'ENDSEC');
+
+    // === ENTITIES SECTION ===
+    addLine(0, 'SECTION');
+    addLine(2, 'ENTITIES');
+    lines = lines.concat(entityBuffer);
+    addLine(0, 'ENDSEC');
+
+    // === EOF ===
+    addLine(0, 'EOF');
+
+    return lines.join('\n');
   }
 </script>
 
